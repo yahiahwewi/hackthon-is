@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroGuard | Advanced Stroke Prediction</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        medical: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        accent: '#818cf8',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .glass-input:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+            outline: none;
+        }
+
+        .risk-meter {
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(to right, #22c55e, #eab308, #ef4444);
+        }
+
+        .risk-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            position: absolute;
+            top: -2px;
+            transform: translateX(-50%);
+            transition: left 0.5s ease;
+        }
+
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: rgba(15, 23, 42, 0.9);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.875rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: rgba(15, 23, 42, 0.9) transparent transparent transparent;
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-900 text-slate-50 min-h-screen flex flex-col items-center justify-center p-4 selection:bg-primary selection:text-white">
+
+    <!-- Background Gradients -->
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/10 rounded-full blur-[100px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-accent/10 rounded-full blur-[100px]"></div>
+        <div
+            class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-medical-500/5 rounded-full blur-[120px]">
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in">
+
+        <!-- Left Column: Input Form -->
+        <div class="glass rounded-3xl p-8 shadow-2xl animate-slide-up">
+            <div class="mb-8">
+                <div class="flex items-center mb-2">
+                    <div
+                        class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center mr-3">
+                        <i class="fas fa-brain text-white"></i>
+                    </div>
+                    <h1
+                        class="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                        NeuroGuard AI
+                    </h1>
+                </div>
+                <p class="text-slate-400">Advanced Stroke Risk Assessment System</p>
+
+                <!-- Progress Bar -->
+                <div class="mt-6">
+                    <div class="flex justify-between text-sm text-slate-400 mb-2">
+                        <span>Personal Info</span>
+                        <span>Health Metrics</span>
+                        <span>Lifestyle</span>
+                        <span>Review</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill" style="width: 25%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <form id="predForm" class="space-y-6">
+                <!-- Step 1: Personal Information -->
+                <div id="step1" class="form-step active">
+                    <h2 class="text-xl font-semibold text-white mb-6 flex items-center">
+                        <span
+                            class="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center text-sm mr-3">1</span>
+                        Personal Information
+                    </h2>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-slate-300 flex items-center">
+                                Age
+                                <div class="tooltip ml-1">
+                                    <i class="fas fa-info-circle text-slate-500 text-xs"></i>
+                                    <div class="tooltip-text">Age is a significant factor in stroke risk, with risk
+                                        doubling each decade after age 55.</div>
+                                </div>
+                            </label>
+                            <input type="number" id="age" value="50" min="1" max="120"
+                                class="glass-input w-full rounded-xl px-4 py-3 text-white" required>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-slate-300">Gender</label>
+                            <div class="flex space-x-2">
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" name="gender" value="Male" class="hidden peer" checked>
+                                    <div
+                                        class="glass-input rounded-xl px-4 py-3 text-center peer-checked:border-primary peer-checked:bg-primary/10 transition-all">
+                                        Male
+                                    </div>
+                                </label>
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" name="gender" value="Female" class="hidden peer">
+                                    <div
+                                        class="glass-input rounded-xl px-4 py-3 text-center peer-checked:border-primary peer-checked:bg-primary/10 transition-all">
+                                        Female
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between mt-8">
+                        <div></div> <!-- Empty div for spacing -->
+                        <button type="button"
+                            class="next-step bg-primary hover:bg-primary-600 text-white font-medium rounded-xl px-6 py-3 transition-colors">
+                            Continue <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Health Metrics -->
+                <div id="step2" class="form-step">
+                    <h2 class="text-xl font-semibold text-white mb-6 flex items-center">
+                        <span
+                            class="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center text-sm mr-3">2</span>
+                        Health Metrics
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-slate-300 flex items-center">
+                                Avg Glucose Level
+                                <div class="tooltip ml-1">
+                                    <i class="fas fa-info-circle text-slate-500 text-xs"></i>
+                                    <div class="tooltip-text">High glucose levels can damage blood vessels, increasing
+                                        stroke risk. Normal range is 70-100 mg/dL.</div>
+                                </div>
+                            </label>
+                            <div class="relative">
+                                <input type="number" id="glucose" value="100" step="0.1" min="0"
+                                    class="glass-input w-full rounded-xl px-4 py-3 text-white" required>
+                                <span class="absolute right-4 top-3.5 text-xs text-slate-500">mg/dL</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-slate-300 flex items-center">
+                                BMI (Body Mass Index)
+                                <div class="tooltip ml-1">
+                                    <i class="fas fa-info-circle text-slate-500 text-xs"></i>
+                                    <div class="tooltip-text">BMI over 25 increases stroke risk. Healthy range is
+                                        18.5-24.9.</div>
+                                </div>
+                            </label>
+                            <div class="relative">
+                                <input type="number" id="bmi" value="25" step="0.1" min="10" max="60"
+                                    class="glass-input w-full rounded-xl px-4 py-3 text-white">
+                                <span class="absolute right-4 top-3.5 text-xs text-slate-500">kg/m²</span>
+                            </div>
+                            <div class="text-xs text-slate-500 mt-1">
+                                <span id="bmiCategory" class="font-medium">Normal weight</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between mt-8">
+                        <button type="button"
+                            class="prev-step text-slate-400 hover:text-white font-medium rounded-xl px-6 py-3 transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i> Back
+                        </button>
+                        <button type="button"
+                            class="next-step bg-primary hover:bg-primary-600 text-white font-medium rounded-xl px-6 py-3 transition-colors">
+                            Continue <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Lifestyle & Medical History -->
+                <div id="step3" class="form-step">
+                    <h2 class="text-xl font-semibold text-white mb-6 flex items-center">
+                        <span
+                            class="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center text-sm mr-3">3</span>
+                        Lifestyle & Medical History
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-slate-300">Work Type</label>
+                                <select id="work" class="glass-input w-full rounded-xl px-4 py-3 text-white">
+                                    <option value="Private">Private Sector</option>
+                                    <option value="Self-employed">Self Employed</option>
+                                    <option value="Govt_job">Government</option>
+                                    <option value="children">Student/Child</option>
+                                    <option value="Never_worked">Never Worked</option>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-slate-300">Smoking Status</label>
+                                <select id="smoking" class="glass-input w-full rounded-xl px-4 py-3 text-white">
+                                    <option value="never smoked">Never Smoked</option>
+                                    <option value="formerly smoked">Formerly Smoked</option>
+                                    <option value="smokes">Currently Smokes</option>
+                                    <option value="Unknown">Unknown</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Medical History -->
+                        <div class="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 space-y-3">
+                            <p class="text-sm font-medium text-slate-300 mb-2">Medical History</p>
+                            <label class="flex items-center space-x-3 cursor-pointer group">
+                                <input type="checkbox" id="hypertension"
+                                    class="w-5 h-5 rounded border-slate-600 text-primary focus:ring-primary bg-slate-700">
+                                <span class="text-slate-300 group-hover:text-white transition-colors">Hypertension (High
+                                    Blood Pressure)</span>
+                                <div class="tooltip ml-1">
+                                    <i class="fas fa-info-circle text-slate-500 text-xs"></i>
+                                    <div class="tooltip-text">Hypertension is the most important risk factor for stroke,
+                                        increasing risk by 2-4 times.</div>
+                                </div>
+                            </label>
+                            <label class="flex items-center space-x-3 cursor-pointer group">
+                                <input type="checkbox" id="heart_disease"
+                                    class="w-5 h-5 rounded border-slate-600 text-primary focus:ring-primary bg-slate-700">
+                                <span class="text-slate-300 group-hover:text-white transition-colors">History of Heart
+                                    Disease</span>
+                                <div class="tooltip ml-1">
+                                    <i class="fas fa-info-circle text-slate-500 text-xs"></i>
+                                    <div class="tooltip-text">Heart conditions like atrial fibrillation can cause blood
+                                        clots that lead to stroke.</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between mt-8">
+                        <button type="button"
+                            class="prev-step text-slate-400 hover:text-white font-medium rounded-xl px-6 py-3 transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i> Back
+                        </button>
+                        <button type="button"
+                            class="next-step bg-primary hover:bg-primary-600 text-white font-medium rounded-xl px-6 py-3 transition-colors">
+                            Continue <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Review & Submit -->
+                <div id="step4" class="form-step">
+                    <h2 class="text-xl font-semibold text-white mb-6 flex items-center">
+                        <span
+                            class="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center text-sm mr-3">4</span>
+                        Review Information
+                    </h2>
+
+                    <div class="space-y-4 bg-slate-800/30 rounded-xl p-4 border border-slate-700/50">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-slate-400">Age</p>
+                                <p id="reviewAge" class="font-medium">50</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-slate-400">Gender</p>
+                                <p id="reviewGender" class="font-medium">Male</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-slate-400">Glucose Level</p>
+                                <p id="reviewGlucose" class="font-medium">100 mg/dL</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-slate-400">BMI</p>
+                                <p id="reviewBmi" class="font-medium">25 (Normal weight)</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-slate-400">Work Type</p>
+                                <p id="reviewWork" class="font-medium">Private Sector</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-slate-400">Smoking Status</p>
+                                <p id="reviewSmoking" class="font-medium">Never Smoked</p>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-sm text-slate-400">Medical Conditions</p>
+                            <p id="reviewConditions" class="font-medium">None reported</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-primary/10 border border-primary/20 rounded-xl">
+                        <div class="flex items-start">
+                            <i class="fas fa-shield-alt text-primary mt-1 mr-3"></i>
+                            <div>
+                                <p class="text-sm text-primary font-medium">Your data is secure</p>
+                                <p class="text-xs text-slate-400 mt-1">All information is processed anonymously and
+                                    never stored on our servers.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between mt-8">
+                        <button type="button"
+                            class="prev-step text-slate-400 hover:text-white font-medium rounded-xl px-6 py-3 transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i> Back
+                        </button>
+                        <button type="submit"
+                            class="bg-gradient-to-r from-primary to-accent hover:from-primary-600 hover:to-indigo-600 text-white font-bold rounded-xl px-8 py-3 shadow-lg shadow-primary/20 transform hover:-translate-y-1 transition-all duration-200">
+                            Analyze Risk Profile
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hidden fields for API compatibility -->
+                <input type="hidden" id="residence" value="Urban">
+                <input type="hidden" id="marital" value="Married">
+            </form>
+        </div>
+
+        <!-- Right Column: Results & Info -->
+        <div class="space-y-6 animate-slide-up" style="animation-delay: 0.1s;">
+
+            <!-- Result Card -->
+            <div id="resultCard"
+                class="glass rounded-3xl p-8 h-full flex flex-col justify-center items-center text-center relative overflow-hidden min-h-[400px]">
+
+                <!-- Initial State -->
+                <div id="initialState" class="space-y-4">
+                    <div class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-stethoscope text-slate-500 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white">Ready to Analyze</h3>
+                    <p class="text-slate-400 max-w-xs mx-auto">Complete the form to generate a personalized stroke risk
+                        assessment based on clinical data.</p>
+
+                    <!-- Risk Meter Preview -->
+                    <div class="mt-6 w-full max-w-xs">
+                        <div class="flex justify-between text-xs text-slate-400 mb-1">
+                            <span>Low Risk</span>
+                            <span>Medium Risk</span>
+                            <span>High Risk</span>
+                        </div>
+                        <div class="risk-meter relative">
+                            <div class="risk-indicator bg-white shadow" style="left: 25%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loader" class="hidden">
+                    <div
+                        class="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4">
+                    </div>
+                    <p class="text-primary animate-pulse">Processing Clinical Data...</p>
+                    <p class="text-slate-400 text-sm mt-2">Analyzing risk factors with AI model</p>
+                </div>
+
+                <!-- Result State -->
+                <div id="resultContent" class="hidden w-full space-y-6">
+                    <div id="badge" class="inline-flex items-center px-6 py-2 rounded-full text-lg font-bold mb-4">
+                        <!-- JS will populate -->
+                    </div>
+
+                    <div class="relative w-48 h-48 mx-auto">
+                        <svg class="w-full h-full transform -rotate-90">
+                            <circle cx="96" cy="96" r="88" stroke="currentColor" stroke-width="12" fill="transparent"
+                                class="text-slate-800" />
+                            <circle id="progressCircle" cx="96" cy="96" r="88" stroke="currentColor" stroke-width="12"
+                                fill="transparent" class="text-primary transition-all duration-1000 ease-out"
+                                stroke-dasharray="552" stroke-dashoffset="552" />
+                        </svg>
+                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                            <span id="probScore" class="text-4xl font-bold text-white">0%</span>
+                            <p class="text-xs text-slate-400 uppercase tracking-wider mt-1">Probability</p>
+                        </div>
+                    </div>
+
+                    <!-- Risk Meter -->
+                    <div class="w-full max-w-xs">
+                        <div class="flex justify-between text-xs text-slate-400 mb-1">
+                            <span>Low</span>
+                            <span>Medium</span>
+                            <span>High</span>
+                        </div>
+                        <div class="risk-meter relative">
+                            <div id="riskIndicator" class="risk-indicator bg-white shadow" style="left: 25%"></div>
+                        </div>
+                    </div>
+
+                    <div id="factors" class="text-left bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
+                        <!-- JS will populate -->
+                    </div>
+
+                    <!-- Prevention Tips -->
+                    <div id="preventionTips"
+                        class="hidden text-left bg-medical-500/10 rounded-xl p-6 border border-medical-500/20">
+                        <h4
+                            class="text-sm font-semibold text-medical-400 mb-3 uppercase tracking-wider flex items-center">
+                            <i class="fas fa-heartbeat mr-2"></i> Prevention Recommendations
+                        </h4>
+                        <div id="preventionContent" class="space-y-2 text-sm text-slate-300">
+                            <!-- JS will populate -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Cards -->
+            <div class="space-y-4">
+                <!-- Model Info -->
+                <div class="glass rounded-2xl p-6 flex items-center space-x-4">
+                    <div class="p-3 bg-blue-500/20 rounded-lg text-blue-400">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-white">AI-Powered Analysis</h4>
+                        <p class="text-sm text-slate-400">Based on XGBoost Ensemble (AUC: 0.84)</p>
+                    </div>
+                </div>
+
+                <!-- Disclaimer -->
+                <div class="glass rounded-2xl p-6 border border-slate-700/50">
+                    <div class="flex items-start">
+                        <i class="fas fa-exclamation-triangle text-amber-500 mt-1 mr-3"></i>
+                        <div>
+                            <h4 class="font-semibold text-white mb-1">Medical Disclaimer</h4>
+                            <p class="text-xs text-slate-400">This tool provides risk assessment only and is not a
+                                substitute for professional medical advice. Consult a healthcare provider for medical
+                                concerns.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Form Navigation
+        let currentStep = 1;
+        const totalSteps = 4;
+
+        document.querySelectorAll('.next-step').forEach(button => {
+            button.addEventListener('click', () => {
+                if (validateStep(currentStep)) {
+                    navigateToStep(currentStep + 1);
+                }
+            });
+        });
+
+        document.querySelectorAll('.prev-step').forEach(button => {
+            button.addEventListener('click', () => {
+                navigateToStep(currentStep - 1);
+            });
+        });
+
+        function navigateToStep(step) {
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            document.getElementById(`step${step}`).classList.add('active');
+            currentStep = step;
+
+            // Update progress bar
+            const progressPercentage = (step / totalSteps) * 100;
+            document.getElementById('progressFill').style.width = `${progressPercentage}%`;
+
+            // Update review information on step 4
+            if (step === 4) {
+                updateReviewInfo();
+            }
+        }
+
+        function validateStep(step) {
+            // Simple validation for demo purposes
+            if (step === 1) {
+                const age = document.getElementById('age').value;
+                if (!age || age < 1 || age > 120) {
+                    alert('Please enter a valid age between 1 and 120');
+                    return false;
+                }
+            }
+
+            if (step === 2) {
+                const glucose = document.getElementById('glucose').value;
+                if (!glucose || glucose < 0) {
+                    alert('Please enter a valid glucose level');
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function updateReviewInfo() {
+            document.getElementById('reviewAge').textContent = document.getElementById('age').value;
+            document.getElementById('reviewGender').textContent = document.querySelector('input[name="gender"]:checked').value;
+            document.getElementById('reviewGlucose').textContent = document.getElementById('glucose').value + ' mg/dL';
+
+            const bmi = document.getElementById('bmi').value;
+            document.getElementById('reviewBmi').textContent = bmi + ' (' + getBMICategory(bmi) + ')';
+
+            document.getElementById('reviewWork').textContent = document.getElementById('work').options[document.getElementById('work').selectedIndex].text;
+            document.getElementById('reviewSmoking').textContent = document.getElementById('smoking').options[document.getElementById('smoking').selectedIndex].text;
+
+            const conditions = [];
+            if (document.getElementById('hypertension').checked) conditions.push('Hypertension');
+            if (document.getElementById('heart_disease').checked) conditions.push('Heart Disease');
+
+            document.getElementById('reviewConditions').textContent = conditions.length > 0 ? conditions.join(', ') : 'None reported';
+        }
+
+        function getBMICategory(bmi) {
+            if (bmi < 18.5) return 'Underweight';
+            if (bmi < 25) return 'Normal weight';
+            if (bmi < 30) return 'Overweight';
+            return 'Obese';
+        }
+
+        // BMI category display
+        document.getElementById('bmi').addEventListener('input', function () {
+            const bmi = this.value;
+            document.getElementById('bmiCategory').textContent = getBMICategory(bmi);
+        });
+
+        // Form submission
+        document.getElementById('predForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // UI State
+            const initialState = document.getElementById('initialState');
+            const loader = document.getElementById('loader');
+            const resultContent = document.getElementById('resultContent');
+            const preventionTips = document.getElementById('preventionTips');
+
+            initialState.classList.add('hidden');
+            resultContent.classList.add('hidden');
+            preventionTips.classList.add('hidden');
+            loader.classList.remove('hidden');
+
+            // Collect Data
+            const data = {
+                age: parseFloat(document.getElementById('age').value),
+                gender: document.querySelector('input[name="gender"]:checked').value,
+                avg_glucose_level: parseFloat(document.getElementById('glucose').value),
+                bmi: parseFloat(document.getElementById('bmi').value) || 0,
+                work_type: document.getElementById('work').value,
+                Residence_type: document.getElementById('residence').value,
+                ever_married: document.getElementById('marital').value,
+                smoking_status: document.getElementById('smoking').value,
+                hypertension: document.getElementById('hypertension').checked ? 1 : 0,
+                heart_disease: document.getElementById('heart_disease').checked ? 1 : 0
+            };
+
+            try {
+                // For demo purposes, we'll simulate an API response
+                // In production, replace with actual API call
+                await new Promise(r => setTimeout(r, 1500));
+
+                // Mock response based on input data
+                const mockProbability = calculateMockProbability(data);
+                const mockRiskFactors = generateMockRiskFactors(data);
+                const mockIsHighRisk = mockProbability > 0.3;
+
+                const mockResult = {
+                    probability: mockProbability,
+                    is_high_risk: mockIsHighRisk,
+                    risk_factors: mockRiskFactors
+                };
+
+                // Update UI with mock result
+                updateResults(mockResult);
+
+            } catch (error) {
+                console.error(error);
+                loader.classList.add('hidden');
+                initialState.classList.remove('hidden');
+                alert('Error connecting to AI server. Make sure the backend is running.');
+            }
+        });
+
+        function calculateMockProbability(data) {
+            let probability = 0.01; // Base probability
+
+            // Age factor
+            if (data.age >= 65) probability += 0.25;
+            else if (data.age >= 55) probability += 0.15;
+            else if (data.age >= 45) probability += 0.08;
+
+            // Hypertension
+            if (data.hypertension) probability += 0.2;
+
+            // Heart disease
+            if (data.heart_disease) probability += 0.15;
+
+            // Glucose level
+            if (data.avg_glucose_level > 140) probability += 0.1;
+            else if (data.avg_glucose_level > 100) probability += 0.05;
+
+            // BMI
+            if (data.bmi >= 30) probability += 0.1;
+            else if (data.bmi >= 25) probability += 0.05;
+
+            // Smoking
+            if (data.smoking_status === 'smokes') probability += 0.1;
+            else if (data.smoking_status === 'formerly smoked') probability += 0.05;
+
+            // Cap at 0.85 for realism
+            return Math.min(probability, 0.85);
+        }
+
+        function generateMockRiskFactors(data) {
+            const factors = [];
+
+            if (data.age >= 65) factors.push("Advanced age (65+)");
+            else if (data.age >= 55) factors.push("Age over 55");
+
+            if (data.hypertension) factors.push("Hypertension");
+            if (data.heart_disease) factors.push("Heart disease");
+
+            if (data.avg_glucose_level > 140) factors.push("Elevated glucose levels");
+            else if (data.avg_glucose_level > 100) factors.push("Borderline glucose levels");
+
+            if (data.bmi >= 30) factors.push("Obesity (BMI ≥ 30)");
+            else if (data.bmi >= 25) factors.push("Overweight (BMI 25-29.9)");
+
+            if (data.smoking_status === 'smokes') factors.push("Current smoking");
+            else if (data.smoking_status === 'formerly smoked') factors.push("History of smoking");
+
+            if (factors.length === 0) factors.push("No significant risk factors identified");
+
+            return factors;
+        }
+
+        function updateResults(result) {
+            const loader = document.getElementById('loader');
+            const resultContent = document.getElementById('resultContent');
+            const preventionTips = document.getElementById('preventionTips');
+
+            loader.classList.add('hidden');
+            resultContent.classList.remove('hidden');
+            resultContent.classList.add('animate-fade-in');
+            preventionTips.classList.remove('hidden');
+
+            const badge = document.getElementById('badge');
+            const probScore = document.getElementById('probScore');
+            const progressCircle = document.getElementById('progressCircle');
+            const riskIndicator = document.getElementById('riskIndicator');
+            const factorsDiv = document.getElementById('factors');
+            const preventionContent = document.getElementById('preventionContent');
+
+            // Set Score
+            const percentage = (result.probability * 100).toFixed(1);
+            probScore.innerText = percentage + '%';
+
+            // Animate Circle
+            const circumference = 552;
+            const offset = circumference - (result.probability * circumference);
+            setTimeout(() => {
+                progressCircle.style.strokeDashoffset = offset;
+                // Color based on risk
+                progressCircle.classList.remove('text-primary', 'text-medical-400', 'text-amber-400', 'text-red-400');
+                if (result.probability > 0.3) {
+                    progressCircle.classList.add('text-red-400');
+                    riskIndicator.style.left = `${85 + (result.probability - 0.3) * 30}%`;
+                } else if (result.probability > 0.1) {
+                    progressCircle.classList.add('text-amber-400');
+                    riskIndicator.style.left = `${25 + (result.probability - 0.1) * 300}%`;
+                } else {
+                    progressCircle.classList.add('text-medical-400');
+                    riskIndicator.style.left = `${result.probability * 250}%`;
+                }
+            }, 100);
+
+            // Set Badge
+            if (result.is_high_risk) {
+                badge.className = 'inline-flex items-center px-6 py-2 rounded-full text-lg font-bold mb-4 bg-red-500/20 text-red-300 border border-red-500/50';
+                badge.innerHTML = `
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    High Risk Detected
+                `;
+            } else if (result.probability > 0.1) {
+                badge.className = 'inline-flex items-center px-6 py-2 rounded-full text-lg font-bold mb-4 bg-amber-500/20 text-amber-300 border border-amber-500/50';
+                badge.innerHTML = `
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    Moderate Risk
+                `;
+            } else {
+                badge.className = 'inline-flex items-center px-6 py-2 rounded-full text-lg font-bold mb-4 bg-medical-500/20 text-medical-300 border border-medical-500/50';
+                badge.innerHTML = `
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Low Risk Profile
+                `;
+            }
+
+            // Set Factors
+            factorsDiv.innerHTML = '';
+            if (result.risk_factors.length > 0 && !result.risk_factors[0].includes('No significant')) {
+                const title = document.createElement('h4');
+                title.className = 'text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider flex items-center';
+                title.innerHTML = `<i class="fas fa-list-ul mr-2"></i> Contributing Factors`;
+                factorsDiv.appendChild(title);
+
+                result.risk_factors.forEach(factor => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center text-slate-200 mb-2';
+                    div.innerHTML = `
+                        <i class="fas fa-chevron-right text-primary mr-2 text-xs"></i>
+                        ${factor}
+                    `;
+                    factorsDiv.appendChild(div);
+                });
+            } else {
+                factorsDiv.innerHTML = `
+                    <h4 class="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider flex items-center">
+                        <i class="fas fa-check-circle mr-2 text-medical-400"></i> Risk Factors
+                    </h4>
+                    <p class="text-slate-400 text-sm">No significant aggravating factors detected.</p>
+                `;
+            }
+
+            // Set Prevention Tips
+            preventionContent.innerHTML = '';
+            const tipsTitle = document.createElement('h4');
+            tipsTitle.className = 'text-sm font-semibold text-medical-400 mb-3 uppercase tracking-wider';
+            preventionContent.appendChild(tipsTitle);
+
+            const tips = [
+                "Maintain a healthy blood pressure through diet and exercise",
+                "Control blood sugar levels if you have diabetes",
+                "Follow a heart-healthy diet low in salt and saturated fats",
+                "Engage in regular physical activity (150 mins/week)",
+                "Avoid tobacco and limit alcohol consumption",
+                "Maintain a healthy weight (BMI 18.5-24.9)"
+            ];
+
+            if (result.is_high_risk) {
+                tips.unshift("Consult with a healthcare provider for personalized guidance");
+                tipsTitle.textContent = "Immediate Actions Recommended";
+            } else {
+                tipsTitle.textContent = "General Prevention Tips";
+            }
+
+            tips.forEach(tip => {
+                const div = document.createElement('div');
+                div.className = 'flex items-start text-slate-300 mb-2';
+                div.innerHTML = `
+                    <i class="fas fa-check text-medical-400 mr-2 mt-1 text-xs"></i>
+                    <span class="text-sm">${tip}</span>
+                `;
+                preventionContent.appendChild(div);
+            });
+        }
+    </script>
+</body>
+
+</html>

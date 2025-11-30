@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroGuard | Advanced Stroke Prediction</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        primary: '#38bdf8',
+                        accent: '#818cf8',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .glass-input:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+            outline: none;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-900 text-slate-50 min-h-screen flex flex-col items-center justify-center p-4 selection:bg-primary selection:text-white">
+
+    <!-- Background Gradients -->
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/20 rounded-full blur-[100px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-accent/20 rounded-full blur-[100px]"></div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in">
+
+        <!-- Left Column: Input Form -->
+        <div class="glass rounded-3xl p-8 shadow-2xl animate-slide-up">
+            <div class="mb-8">
+                <h1
+                    class="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+                    NeuroGuard AI
+                </h1>
+                <p class="text-slate-400">Advanced Stroke Risk Assessment System</p>
+            </div>
+
+            <form id="predForm" class="space-y-6">
+                <!-- Personal Info -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-300">Age</label>
+                        <input type="number" id="age" value="50"
+                            class="glass-input w-full rounded-xl px-4 py-3 text-white" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-300">Gender</label>
+                        <select id="gender" class="glass-input w-full rounded-xl px-4 py-3 text-white">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Vitals -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-300">Avg Glucose Level</label>
+                        <div class="relative">
+                            <input type="number" id="glucose" value="100" step="0.1"
+                                class="glass-input w-full rounded-xl px-4 py-3 text-white" required>
+                            <span class="absolute right-4 top-3.5 text-xs text-slate-500">mg/dL</span>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-300">BMI</label>
+                        <div class="relative">
+                            <input type="number" id="bmi" value="25" step="0.1"
+                                class="glass-input w-full rounded-xl px-4 py-3 text-white">
+                            <span class="absolute right-4 top-3.5 text-xs text-slate-500">kg/m²</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lifestyle -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-300">Work Type</label>
+                        <select id="work" class="glass-input w-full rounded-xl px-4 py-3 text-white">
+                            <option value="Private">Private Sector</option>
+                            <option value="Self-employed">Self Employed</option>
+                            <option value="Govt_job">Government</option>
+                            <option value="children">Student/Child</option>
+                            <option value="Never_worked">Never Worked</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-300">Smoking Status</label>
+                        <select id="smoking" class="glass-input w-full rounded-xl px-4 py-3 text-white">
+                            <option value="never smoked">Never Smoked</option>
+                            <option value="formerly smoked">Formerly Smoked</option>
+                            <option value="smokes">Currently Smokes</option>
+                            <option value="Unknown">Unknown</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Medical History -->
+                <div class="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 space-y-3">
+                    <p class="text-sm font-medium text-slate-300 mb-2">Medical History</p>
+                    <label class="flex items-center space-x-3 cursor-pointer group">
+                        <input type="checkbox" id="hypertension"
+                            class="w-5 h-5 rounded border-slate-600 text-primary focus:ring-primary bg-slate-700">
+                        <span class="text-slate-300 group-hover:text-white transition-colors">Hypertension (High Blood
+                            Pressure)</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer group">
+                        <input type="checkbox" id="heart_disease"
+                            class="w-5 h-5 rounded border-slate-600 text-primary focus:ring-primary bg-slate-700">
+                        <span class="text-slate-300 group-hover:text-white transition-colors">History of Heart
+                            Disease</span>
+                    </label>
+                </div>
+
+                <!-- Hidden fields for API compatibility -->
+                <input type="hidden" id="residence" value="Urban">
+                <input type="hidden" id="marital" value="Married">
+
+                <button type="submit"
+                    class="w-full py-4 bg-gradient-to-r from-primary to-accent hover:from-blue-400 hover:to-indigo-400 text-white font-bold rounded-xl shadow-lg shadow-primary/20 transform hover:-translate-y-1 transition-all duration-200">
+                    Analyze Risk Profile
+                </button>
+            </form>
+        </div>
+
+        <!-- Right Column: Results & Info -->
+        <div class="space-y-6 animate-slide-up" style="animation-delay: 0.1s;">
+
+            <!-- Result Card -->
+            <div id="resultCard"
+                class="glass rounded-3xl p-8 h-full flex flex-col justify-center items-center text-center relative overflow-hidden min-h-[400px]">
+
+                <!-- Initial State -->
+                <div id="initialState" class="space-y-4">
+                    <div class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-10 h-10 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white">Ready to Analyze</h3>
+                    <p class="text-slate-400 max-w-xs mx-auto">Fill out the patient's clinical data and click analyze to
+                        generate a real-time risk assessment.</p>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loader" class="hidden">
+                    <div
+                        class="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4">
+                    </div>
+                    <p class="text-primary animate-pulse">Processing Clinical Data...</p>
+                </div>
+
+                <!-- Result State -->
+                <div id="resultContent" class="hidden w-full space-y-6">
+                    <div id="badge" class="inline-flex items-center px-6 py-2 rounded-full text-lg font-bold mb-4">
+                        <!-- JS will populate -->
+                    </div>
+
+                    <div class="relative w-48 h-48 mx-auto">
+                        <svg class="w-full h-full transform -rotate-90">
+                            <circle cx="96" cy="96" r="88" stroke="currentColor" stroke-width="12" fill="transparent"
+                                class="text-slate-800" />
+                            <circle id="progressCircle" cx="96" cy="96" r="88" stroke="currentColor" stroke-width="12"
+                                fill="transparent" class="text-primary transition-all duration-1000 ease-out"
+                                stroke-dasharray="552" stroke-dashoffset="552" />
+                        </svg>
+                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                            <span id="probScore" class="text-4xl font-bold text-white">0%</span>
+                            <p class="text-xs text-slate-400 uppercase tracking-wider mt-1">Probability</p>
+                        </div>
+                    </div>
+
+                    <div id="factors" class="text-left bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
+                        <!-- JS will populate -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Card -->
+            <div class="glass rounded-2xl p-6 flex items-center space-x-4">
+                <div class="p-3 bg-blue-500/20 rounded-lg text-blue-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                const initialState = document.getElementById('initialState');
+                const loader = document.getElementById('loader');
+                const resultContent = document.getElementById('resultContent');
+
+                initialState.classList.add('hidden');
+                resultContent.classList.add('hidden');
+                loader.classList.remove('hidden');
+
+                // Collect Data
+                const data = {
+                age: parseFloat(document.getElementById('age').value),
+                gender: document.getElementById('gender').value,
+                avg_glucose_level: parseFloat(document.getElementById('glucose').value),
+                bmi: parseFloat(document.getElementById('bmi').value) || 0,
+                work_type: document.getElementById('work').value,
+                Residence_type: document.getElementById('residence').value,
+                ever_married: document.getElementById('marital').value,
+                smoking_status: document.getElementById('smoking').value,
+                hypertension: document.getElementById('hypertension').checked ? 1 : 0,
+                heart_disease: document.getElementById('heart_disease').checked ? 1 : 0
+                };
+
+                try {
+                // Simulate API call delay for effect (remove in prod)
+                // await new Promise(r => setTimeout(r, 800));
+
+                const response = await fetch('http://localhost:8000/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                // Update UI
+                loader.classList.add('hidden');
+                resultContent.classList.remove('hidden');
+                resultContent.classList.add('animate-fade-in');
+
+                const badge = document.getElementById('badge');
+                const probScore = document.getElementById('probScore');
+                const progressCircle = document.getElementById('progressCircle');
+                const factorsDiv = document.getElementById('factors');
+
+                // Set Score
+                const percentage = (result.probability * 100).toFixed(1);
+                probScore.innerText = percentage + '%';
+
+                // Animate Circle
+                const circumference = 552;
+                const offset = circumference - (result.probability * circumference);
+                setTimeout(() => {
+                progressCircle.style.strokeDashoffset = offset;
+                // Color based on risk
+                progressCircle.classList.remove('text-primary', 'text-green-400', 'text-red-400');
+                if (result.is_high_risk) progressCircle.classList.add('text-red-400');
+                else progressCircle.classList.add('text-green-400');
+                }, 100);
+
+                // Set Badge
+                if (result.is_high_risk) {
+                badge.className = 'inline-flex items-center px-6 py-2 rounded-full text-lg font-bold mb-4 bg-red-500/20
+                text-red-300 border border-red-500/50';
+                badge.innerHTML = `
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
+                </svg>
+                High Risk Detected
+                `;
+                } else {
+                badge.className = 'inline-flex items-center px-6 py-2 rounded-full text-lg font-bold mb-4
+                bg-green-500/20 text-green-300 border border-green-500/50';
+                badge.innerHTML = `
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Low Risk Profile
+                `;
+                }
+
+                // Set Factors
+                factorsDiv.innerHTML = '';
+                if (result.risk_factors.length > 0) {
+                const title = document.createElement('h4');
+                title.className = 'text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider';
+                title.innerText = 'Contributing Factors';
+                factorsDiv.appendChild(title);
+
+                result.risk_factors.forEach(factor => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center text-slate-200 mb-2';
+                div.innerHTML = `
+                <svg class="w-4 h-4 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
+                </svg>
+                ${factor}
+                `;
+                factorsDiv.appendChild(div);
+                });
+                } else {
+                factorsDiv.innerHTML = '<p class="text-slate-400 text-sm">No significant aggravating factors detected.
+                </p>';
+                }
+
+                } catch (error) {
+                console.error(error);
+                loader.classList.add('hidden');
+                initialState.classList.remove('hidden');
+                alert('Error connecting to AI server. Make sure main.py is running.');
+                }
+                });
+                </script>
+</body>
+
+</html>

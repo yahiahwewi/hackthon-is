@@ -1,0 +1,7 @@
+filename,status,auc,error
+submission_advanced_ensemble.csv,ERROR,,Length mismatch: 1022 vs 818
+submission_ensemble_v1.csv,ERROR,,Length mismatch: 1022 vs 818
+submission_knn.csv,ERROR,,Length mismatch: 1022 vs 818
+submission_median.csv,ERROR,,Length mismatch: 1022 vs 818
+submission_xgboost_labels.csv,ERROR,,Length mismatch: 1022 vs 818
+submission_xgboost_prob.csv,ERROR,,Length mismatch: 1022 vs 818
